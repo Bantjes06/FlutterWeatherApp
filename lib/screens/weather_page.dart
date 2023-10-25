@@ -3,6 +3,7 @@ import 'package:weather_app/models/weather_model.dart';
 import 'package:anim_search_bar/anim_search_bar.dart';
 import 'dart:developer';
 import 'package:weather_app/services/weather_data.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class WeatherScreen extends StatefulWidget {
   const WeatherScreen({super.key});
@@ -20,17 +21,55 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
   Future<WeatherModel>? _myData;
 
-@override
-void initState() {
-  super.initState();
-  _myData = getData(true, "");
-}
+  @override
+  void initState() {
+    super.initState();
+    _myData = getData(true, "");
+  }
 
   String capitalizeFirstLetter(String text) {
     if (text == null || text.isEmpty) {
       return "";
     }
     return text[0].toUpperCase() + text.substring(1);
+  }
+
+  IconData getWeatherIcon(String description) {
+    if (description.contains("clear sky")) {
+      return FontAwesomeIcons.sun;
+    } else if (description.contains("few clouds") ||
+        description.contains("scattered clouds") ||
+        description.contains("broken clouds") ||
+        description.contains("mist")) {
+      return FontAwesomeIcons.cloud;
+    } else if (description.contains('shower rain') ||
+        description.contains('rain')) {
+      return FontAwesomeIcons.cloudRain;
+    } else if (description.contains('thunderstorm')) {
+      return FontAwesomeIcons.boltLightning;
+    } else if (description.contains('snow')) {
+      return FontAwesomeIcons.snowflake;
+    }
+    return FontAwesomeIcons.question; // Default case
+  }
+
+  Color getWeatherIconColor(String description) {
+    if (description.contains("clear sky")) {
+      return Colors.yellow;
+    } else if (description.contains("few clouds") ||
+        description.contains("scattered clouds") ||
+        description.contains("broken clouds") ||
+        description.contains("mist")) {
+      return Colors.grey;
+    } else if (description.contains('shower rain') ||
+        description.contains('rain')) {
+      return Colors.blue;
+    } else if (description.contains('thunderstorm')) {
+      return Colors.deepPurple;
+    } else if (description.contains('snow')) {
+      return Colors.white;
+    }
+    return Colors.black; // Default case
   }
 
   @override
@@ -53,6 +92,8 @@ void initState() {
 //If data has no error
             } else if (snapshot.hasData) {
               final data = snapshot.data as WeatherModel;
+              IconData weatherIcon = getWeatherIcon(data.desc);
+              Color weatherIconColor = getWeatherIconColor(data.desc);
               return Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
@@ -100,6 +141,14 @@ void initState() {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
+                            FaIcon(
+                              weatherIcon,
+                              size: 100,
+                              color: weatherIconColor,
+                            ),
+                            const SizedBox(
+                              height: 25,
+                            ),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
