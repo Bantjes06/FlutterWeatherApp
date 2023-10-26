@@ -4,6 +4,7 @@ import 'package:anim_search_bar/anim_search_bar.dart';
 import 'dart:developer';
 import 'package:weather_app/services/weather_data.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:weather_app/widgets/forecast.dart';
 
 class WeatherScreen extends StatefulWidget {
   const WeatherScreen({super.key});
@@ -40,7 +41,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     } else if (description.contains("few clouds") ||
         description.contains("scattered clouds") ||
         description.contains("broken clouds") ||
-        description.contains("mist")) {
+        description.contains("mist") || description.contains("overcast clouds")) {
       return FontAwesomeIcons.cloud;
     } else if (description.contains('shower rain') ||
         description.contains('rain')) {
@@ -59,7 +60,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     } else if (description.contains("few clouds") ||
         description.contains("scattered clouds") ||
         description.contains("broken clouds") ||
-        description.contains("mist")) {
+        description.contains("mist") || description.contains("overcast clouds")) {
       return Colors.grey;
     } else if (description.contains('shower rain') ||
         description.contains('rain')) {
@@ -72,6 +73,12 @@ class _WeatherScreenState extends State<WeatherScreen> {
     return Colors.black; // Default case
   }
 
+  void updateWeatherData(String city) {
+    setState(() {
+      _myData = getData(false, city);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -81,15 +88,13 @@ class _WeatherScreenState extends State<WeatherScreen> {
         future: _myData,
         builder: (ctx, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-//If data has errors
             if (snapshot.hasError) {
               return Center(
                 child: Text(
-                  '${snapshot.error.toString()} occured',
+                  '${snapshot.error.toString()} occurred',
                   style: const TextStyle(fontSize: 18),
                 ),
               );
-//If data has no error
             } else if (snapshot.hasData) {
               final data = snapshot.data as WeatherModel;
               IconData weatherIcon = getWeatherIcon(data.desc);
@@ -99,16 +104,18 @@ class _WeatherScreenState extends State<WeatherScreen> {
                     const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
                 decoration: const BoxDecoration(
                     gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: <Color>[
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: <Color>[
                           Color.fromARGB(255, 61, 61, 63),
                           Color.fromARGB(255, 56, 56, 61),
                           Color.fromARGB(255, 67, 67, 77),
                           Color.fromARGB(255, 122, 121, 120),
                           Color.fromARGB(255, 158, 157, 157)
                         ],
-                        tileMode: TileMode.mirror)),
+                        tileMode: TileMode.mirror
+                        // Your gradient colors here
+                    )),
                 width: double.infinity,
                 height: double.infinity,
                 child: SafeArea(
@@ -122,21 +129,18 @@ class _WeatherScreenState extends State<WeatherScreen> {
                           if (textController.text.isEmpty) {
                             log('No city entered');
                           } else {
-                            setState(() {
-                              _myData = getData(false, textController.text);
-                            });
+                            updateWeatherData(textController.text);
                             FocusScope.of(context).unfocus();
                           }
                         },
                         onSubmitted: (value) {
                           if (value.isNotEmpty) {
-                            setState(() {
-                              _myData = getData(false, value);
-                            });
+                            updateWeatherData(value);
                             FocusScope.of(context).unfocus();
                           }
                         },
                       ),
+                      const SizedBox(height: 100,),
                       Expanded(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -185,7 +189,20 @@ class _WeatherScreenState extends State<WeatherScreen> {
                                 color: Colors.white,
                                 fontSize: 24,
                               ),
-                            )
+                            ),
+                            const SizedBox(height: 50,),
+                            const Text(
+                              '5 Day Forecast with average temperature',
+                              style: TextStyle(
+                                color: Colors.white,
+                              ),
+                            ),
+                            Expanded(
+                              child: ForecastWidget(
+                                isCurrentCity: false,
+                                cityName: data.city,
+                              ),
+                            ),
                           ],
                         ),
                       )
@@ -200,7 +217,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
             );
           } else {
             return Center(
-              child: Text("${snapshot.connectionState} occured"),
+              child: Text("${snapshot.connectionState} occurred"),
             );
           }
           return const Center(
